@@ -859,7 +859,9 @@ void TSubModel::InitialRotate(bool doit)
 						for (auto &vertex : Vertices)
 						{
 							vertex.normal = *mat * vertex.normal;
-							vertex.tangent.xyz = *mat * vertex.tangent.xyz;
+							vertex.tangent.x = (*mat * vertex.tangent.xyz()).x;
+							vertex.tangent.y = (*mat * vertex.tangent.xyz()).y;
+							vertex.tangent.z = (*mat * vertex.tangent.xyz()).z;
 						}
 					}
 				}
@@ -882,7 +884,9 @@ void TSubModel::InitialRotate(bool doit)
 					glm::mat3 normalTransform{{-1.f, 0.f, 0.f}, {0.f, 0.f, 1.f}, {0.f, 1.f, 0.f}};
 					// gwiazdki mają kolory zamiast normalnych, to // ich wtedy nie ruszamy
 					vertex.normal = normalTransform * vertex.normal;
-					vertex.tangent.xyz = normalTransform * vertex.tangent.xyz;
+					vertex.tangent.x = (normalTransform * vertex.tangent.xyz()).x;
+					vertex.tangent.y = (normalTransform * vertex.tangent.xyz()).y;
+					vertex.tangent.z = (normalTransform * vertex.tangent.xyz()).z;
 				}
 			}
 			if (Child)

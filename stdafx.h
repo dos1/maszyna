@@ -92,14 +92,16 @@
 #if defined(__aarch64__) || defined(__arm64__)
 #define GLM_FORCE_NEON
 #else
-#define GLM_FORCE_AVX2
+//#define GLM_FORCE_AVX2
 #endif
+#define GLM_FORCE_ARCH_UNKNOWN
+#define GLM_ARCH
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_CTOR_INIT
 #define GLM_FORCE_INLINE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#define GLM_FORCE_INTRINSICS
+//#define GLM_FORCE_INTRINSICS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_transform_2d.hpp>
