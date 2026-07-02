@@ -65,11 +65,18 @@ void gl::buffer::allocate(targets target, GLsizeiptr size, GLenum hint)
 {
     bind(target);
     glBufferData(glenum_target(target), size, nullptr, hint);
+    m_alloc_size = size;
+    m_alloc_hint = hint;
 }
 
 void gl::buffer::upload(targets target, const void *data, int offset, GLsizeiptr size)
 {
     bind(target);
+    if (m_alloc_hint == GL_STREAM_DRAW && offset == 0 && m_alloc_size > 0)
+    {
+        glBufferData(glenum_target(target), m_alloc_size, nullptr, m_alloc_hint);
+    }
+
     glBufferSubData(glenum_target(target), offset, size, data);
 }
 

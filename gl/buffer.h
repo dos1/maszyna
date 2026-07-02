@@ -30,6 +30,9 @@ namespace gl
 	protected:
         static GLenum glenum_target(targets target);
 
+        GLsizeiptr m_alloc_size { 0 };
+        GLenum m_alloc_hint { GL_DYNAMIC_DRAW };
+
     public:
         buffer();
         ~buffer();
