@@ -14,6 +14,8 @@ http://mozilla.org/MPL/2.0/.
 #include <fstream>
 #include <vector>
 #include <map>
+#include <cstdlib>
+#include <type_traits>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // cParser -- generic class for parsing text data, either from file or provided string
@@ -140,8 +142,28 @@ cParser::operator>>( Type_ &Right ) {
 
     if( true == this->tokens.empty() ) { return *this; }
 
-    std::stringstream converter( this->tokens.front() );
-    converter >> Right;
+    if constexpr( std::is_same<Type_, double>::value ) {
+        Right = std::strtod( this->tokens.front().c_str(), nullptr );
+    }
+    else if constexpr( std::is_same<Type_, float>::value ) {
+        Right = std::strtof( this->tokens.front().c_str(), nullptr );
+    }
+    else if constexpr( std::is_same<Type_, int>::value ) {
+        Right = static_cast<int>( std::strtol( this->tokens.front().c_str(), nullptr, 10 ) );
+    }
+    else if constexpr( std::is_same<Type_, unsigned int>::value ) {
+        Right = static_cast<unsigned int>( std::strtoul( this->tokens.front().c_str(), nullptr, 10 ) );
+    }
+    else if constexpr( std::is_same<Type_, long>::value ) {
+        Right = std::strtol( this->tokens.front().c_str(), nullptr, 10 );
+    }
+    else if constexpr( std::is_same<Type_, unsigned long>::value ) {
+        Right = std::strtoul( this->tokens.front().c_str(), nullptr, 10 );
+    }
+    else {
+        std::stringstream converter( this->tokens.front() );
+        converter >> Right;
+    }
     this->tokens.pop_front();
 
     return *this;
