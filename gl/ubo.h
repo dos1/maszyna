@@ -3,7 +3,10 @@
 #include "object.h"
 #include "bindable.h"
 #include "buffer.h"
+#include "fence.h"
 #include <glm/glm.hpp>
+#include <vector>
+#include <memory>
 
 #define UBS_PAD(x) uint8_t PAD[x]
 
@@ -20,17 +23,35 @@ namespace gl
     class ubo : public buffer
     {
         int index;
+        GLenum m_hint;
+
+        GLintptr m_slot_stride{ 0 };
+        size_t m_slot_count{ 1 };
+        size_t m_cursor{ 0 };
+        size_t m_lap{ 0 };
+        std::vector<std::unique_ptr<fence>> m_wrap_fences;
 
     public:
 	    ubo(size_t size, int index, GLenum hint = GL_DYNAMIC_DRAW);
 
         void bind_uniform();
+        void bind_uniform_range(GLintptr offset, GLsizeiptr size);
 
         void update(const uint8_t *data, int offset, GLsizeiptr size);
         template <typename T> void update(const T &data, size_t offset = 0)
         {
             update(reinterpret_cast<const uint8_t*>(&data), offset, sizeof(data));
         }
+
+        void init_ring(size_t element_size, size_t slot_count);
+        template <typename T> void update_ring(const T &data)
+        {
+            update_ring_bytes(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+        }
+
+    private:
+        void update_ring_bytes(const uint8_t *data, size_t size);
+        void grow_ring(size_t new_slot_count);
     };
 
     // layout std140

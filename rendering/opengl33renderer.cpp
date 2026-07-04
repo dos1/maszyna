@@ -141,6 +141,7 @@ bool opengl33_renderer::Init(GLFWwindow *Window)
 
 	scene_ubo = std::make_unique<gl::ubo>(sizeof(gl::scene_ubs), 0);
 	model_ubo = std::make_unique<gl::ubo>(sizeof(gl::model_ubs), 1, GL_STREAM_DRAW);
+	model_ubo->init_ring(sizeof(gl::model_ubs), 4096);
 	light_ubo = std::make_unique<gl::ubo>(sizeof(gl::light_ubs), 2);
 	instance_ubo = std::make_unique<gl::ubo>(sizeof(gl::instance_ubs), 3, GL_STREAM_DRAW);
 
@@ -151,7 +152,7 @@ bool opengl33_renderer::Init(GLFWwindow *Window)
 	memset(&scene_ubs, 0, sizeof(scene_ubs));
 
 	light_ubo->update(light_ubs);
-	model_ubo->update(model_ubs);
+	model_ubo->update_ring(model_ubs);
 	scene_ubo->update(scene_ubs);
 
 	// initialize instance_ubo slot 0 to identity. This is the matrix sampled by
@@ -991,7 +992,7 @@ if (!Global.gfx_skippipeline)
 				vp.msaa_fb->blit_to(vp.main_fb.get(), vp.width, vp.height, GL_DEPTH_BUFFER_BIT, GL_DEPTH_ATTACHMENT);
 
 				model_ubs.param[0].x = m_framerate / (1.0 / Global.gfx_postfx_motionblur_shutter);
-				model_ubo->update(model_ubs);
+				model_ubo->update_ring(model_ubs);
 				m_pfx_motionblur->apply({vp.main_tex.get(), vp.main_texv.get(), vp.main_texd.get()}, vp.main2_fb.get());
 			}
 			else if (Global.gfx_postfx_ssao_enabled)
@@ -1900,7 +1901,7 @@ bool opengl33_renderer::Render(world_environment *Environment)
     {
         glScalef( 500.0f, 500.0f, 500.0f );
         model_ubs.set_modelview( OpenGLMatrices.data( GL_MODELVIEW ) );
-        model_ubo->update( model_ubs );
+        model_ubo->update_ring( model_ubs );
 
         m_skydomerenderer.update();
         m_skydomerenderer.render();
@@ -1949,7 +1950,7 @@ bool opengl33_renderer::Render(world_environment *Environment)
 		model_ubs.param[0] = color;
         model_ubs.param[1] = glm::vec4(glm::vec3(modelview * glm::vec4(sunvector, 1.0f)), size);
 		model_ubs.param[2] = glm::vec4(0.0f, 1.0f, 1.0f, 0.0f);
-		model_ubo->update(model_ubs);
+		model_ubo->update_ring(model_ubs);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	}
 	// moon
@@ -2026,7 +2027,7 @@ bool opengl33_renderer::Render(world_environment *Environment)
 		model_ubs.param[0] = color;
         model_ubs.param[1] = glm::vec4(glm::vec3(modelview * glm::vec4(moonvector, 1.0f)), size);
 		model_ubs.param[2] = glm::vec4(moonu, moonv, 0.333f, 0.0f);
-		model_ubo->update(model_ubs);
+		model_ubo->update_ring(model_ubs);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	}
 
@@ -2812,7 +2813,7 @@ void opengl33_renderer::Draw_Geometry(const gfx::geometrybank_handle &handle)
 void opengl33_renderer::draw(const gfx::geometry_handle &handle)
 {
 	model_ubs.set_modelview(OpenGLMatrices.data(GL_MODELVIEW));
-	model_ubo->update(model_ubs);
+	model_ubo->update_ring(model_ubs);
 
 	if( m_current_instance_count > 0 ) {
 		// inside Render_Instanced(): one GL instanced draw replaces what would
@@ -2827,7 +2828,7 @@ void opengl33_renderer::draw(const gfx::geometry_handle &handle)
 void opengl33_renderer::draw(std::vector<gfx::geometrybank_handle>::iterator it, std::vector<gfx::geometrybank_handle>::iterator end)
 {
 	model_ubs.set_modelview(OpenGLMatrices.data(GL_MODELVIEW));
-	model_ubo->update(model_ubs);
+	model_ubo->update_ring(model_ubs);
 
 	Draw_Geometry(it, end);
 }
@@ -4113,7 +4114,7 @@ void opengl33_renderer::Render(TMemCell *Memcell)
 void opengl33_renderer::Render_particles()
 {
 	model_ubs.set_modelview(OpenGLMatrices.data(GL_MODELVIEW));
-	model_ubo->update(model_ubs);
+	model_ubo->update_ring(model_ubs);
 
 	Bind_Texture(0, m_smoketexture);
 	m_particlerenderer.update(m_renderpass.pass_camera);
@@ -4185,7 +4186,7 @@ void opengl33_renderer::Render_precipitation()
 	model_ubs.set_modelview(OpenGLMatrices.data(GL_MODELVIEW));
 	model_ubs.param[0] = glm::mix(0.5f * (Global.DayLight.diffuse + Global.DayLight.ambient), colors::white, 0.5f * std::clamp((float)Global.fLuminance, 0.f, 1.f));
 	model_ubs.param[1].x = simulation::Environment.m_precipitation.get_textureoffset();
-	model_ubo->update(model_ubs);
+	model_ubo->update_ring(model_ubs);
 
     m_precipitationrenderer.update();
     m_precipitationrenderer.render();
@@ -5284,7 +5285,7 @@ void opengl33_renderer::Update_Lights(light_array &Lights)
         model_ubs.fog_density = 0.0f;
     }
     // ship config data to the gpu
-	model_ubo->update(model_ubs);
+	model_ubo->update_ring(model_ubs);
 	light_ubo->update(light_ubs);
 }
 

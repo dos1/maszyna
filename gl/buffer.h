@@ -36,11 +36,14 @@ namespace gl
 
         void bind(targets target);
         void bind_base(targets target, GLuint index);
+        void bind_base_range(targets target, GLuint index, GLintptr offset, GLsizeiptr size);
         static void unbind(targets target);
 		static void unbind();
 
         void allocate(targets target, GLsizeiptr size, GLenum hint);
 	    void upload(targets target, const void *data, int offset, GLsizeiptr size);
 	    void download(targets target, void *data, int offset, GLsizeiptr size);
+	    void *map_write_orphan(targets target, GLsizeiptr size, GLenum hint);
+	    void unmap(targets target);
     };
 }
