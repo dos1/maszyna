@@ -925,6 +925,34 @@ opengl_texture::unbind(size_t unit)
     units[unit] = 0;
 }
 
+namespace {
+
+    gl::buffer &texture_upload_pbo() {
+        static gl::buffer pbo;
+        return pbo;
+    }
+
+    void const * stage_texture_upload( void const *Data, size_t Size ) {
+
+        if( Size == 0 ) { return Data; }
+
+        auto &pbo = texture_upload_pbo();
+        void *mapped = pbo.map_write_orphan( gl::buffer::PIXEL_UNPACK_BUFFER, static_cast<GLsizeiptr>( Size ), GL_STREAM_DRAW );
+        if( mapped == nullptr ) {
+            gl::buffer::unbind( gl::buffer::PIXEL_UNPACK_BUFFER );
+            return Data;
+        }
+        std::memcpy( mapped, Data, Size );
+        pbo.unmap( gl::buffer::PIXEL_UNPACK_BUFFER );
+        return nullptr; // offset 0 into the currently bound unpack buffer
+    }
+
+    void end_texture_upload() {
+        gl::buffer::unbind( gl::buffer::PIXEL_UNPACK_BUFFER );
+    }
+
+} // namespace
+
 bool
 opengl_texture::create( bool const Static ) {
 
@@ -1039,10 +1067,12 @@ opengl_texture::create( bool const Static ) {
 
                     datasize = (std::max(datawidth, 4) + 3) / 4 * ( ( std::max( dataheight, 4 ) + 3 ) / 4 ) * datablocksize;
 
+                    auto const *upload_source = stage_texture_upload( &data[ dataoffset ], datasize );
                     ::glCompressedTexImage2D(
                         target, maplevel, internal_format,
                         datawidth, dataheight, 0,
-                        datasize, (GLubyte *)&data[ dataoffset ] );
+                        datasize, upload_source );
+                    end_texture_upload();
 
                     dataoffset += datasize;
                     datawidth = std::max( datawidth / 2, 1 );
@@ -1052,11 +1082,13 @@ opengl_texture::create( bool const Static ) {
                     GLint compressed_format = drivercompressed_formats[internal_format];
 
                     // uncompressed texture data. have the gfx card do the compression as it sees fit
+                    auto const *upload_source = stage_texture_upload( &data[ 0 ], data.size() );
                     ::glTexImage2D(
                         target, 0,
                         Global.compress_tex ? compressed_format : internal_format,
                         data_width, data_height, 0,
-                        data_format, data_type, (GLubyte *)&data[ 0 ] );
+                        data_format, data_type, upload_source );
+                    end_texture_upload();
                 }
             }
 

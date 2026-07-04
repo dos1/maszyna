@@ -37,6 +37,26 @@ void gl::buffer::bind_base(targets target, GLuint index)
     binding_points[target] = *this;
 }
 
+void gl::buffer::bind_base_range(targets target, GLuint index, GLintptr offset, GLsizeiptr size)
+{
+    glBindBufferRange(glenum_target(target), index, *this, offset, size);
+    binding_points[target] = *this;
+}
+
+void *gl::buffer::map_write_orphan(targets target, GLsizeiptr size, GLenum hint)
+{
+    bind(target);
+    glBufferData(glenum_target(target), size, nullptr, hint);
+    return glMapBufferRange(
+        glenum_target(target), 0, size,
+        GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_BUFFER_BIT );
+}
+
+void gl::buffer::unmap(targets target)
+{
+    glUnmapBuffer(glenum_target(target));
+}
+
 void gl::buffer::unbind(targets target)
 {
     if( binding_points[ target ] == 0 ) { return; }
