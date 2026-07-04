@@ -9,7 +9,7 @@
 // by A. J. Preetham Peter Shirley Brian Smits (University of Utah)
 
 float CSkyDome::m_distributionluminance[ 5 ][ 2 ] = {	// Perez distributions
-		{  0.17872f , -1.66303f },		// a = darkening or brightening of the horizon
+		{  0.17872f , -1.46303f },		// a = darkening or brightening of the horizon
 		{ -0.35540f ,  0.42750f },		// b = luminance gradient near the horizon,
 		{ -0.02266f ,  5.32505f },		// c = relative intensity of the circumsolar region
 		{  0.12064f , -2.57705f },		// d = width of the circumsolar region
@@ -185,7 +185,7 @@ float CSkyDome::PerezFunctionO2( float Perezcoeffs[ 5 ], const float Icostheta, 
 void CSkyDome::RebuildColors() {
 
     float twilightfactor = std::clamp( -simulation::Environment.sun().getAngle(), 0.0f, 18.0f ) / 18.0f;
-    auto gammacorrection = glm::mix( glm::vec3( 1.0f ), glm::vec3( 0.45f ), twilightfactor );
+    auto gammacorrection = std::lerp( 1.0f, 0.45f, twilightfactor );
 
 	// get zenith luminance
 	float const chi = ( 4.0f / 9.0f - m_turbidity / 120.0f ) * ( M_PI - 2.0f * m_thetasun );
@@ -258,7 +258,7 @@ void CSkyDome::RebuildColors() {
 			colorconverter.z = 1.0f - std::exp( -m_expfactor * colorconverter.z );  
 		}
 
-        colorconverter.z = std::pow( std::max( colorconverter.z, 0.0f ), gammacorrection.x );
+        colorconverter.z = std::pow( std::max( colorconverter.z, 0.0f ), gammacorrection );
 
         colorconverter.y = std::clamp( colorconverter.y * Global.m_skysaturationcorrection, 0.0f, 1.0f );
         // desaturate sky colour, based on overcast level
@@ -289,6 +289,8 @@ void CSkyDome::RebuildColors() {
             color.z = 0.75f * std::max( color.z + m_sundirection.y, 0.075f );
             color.x = 0.20f * color.z; 
             color.y = 0.65f * color.z;
+if (Global.AirTemperature > 0)
+            color *= 1.0f + simulation::Environment.moon().getIntensity() / 0.12;
         }
         // simple gradient, darkening towards the top
         color *= std::clamp( 1.0f - vertex.y * 0.75f, 0.0f, 1.f );

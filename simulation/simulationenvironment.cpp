@@ -69,15 +69,15 @@ world_environment::compute_weather() {
 	                 Global.AirTemperature > 1 ? "rain:" :
 	                                             "snow:";
 
-    Global.fTurbidity = Global.Overcast <= 0.10 ? 3 :
+    Global.fTurbidity = Global.Overcast <= 0.10 ? 4 :
 	                    Global.Overcast <= 0.20 ? 4 :
 	                    Global.Overcast <= 0.30 ? 5 :
 	                    Global.Overcast <= 0.40 ? 5 :
-	                    Global.Overcast <= 0.50 ? 5 :
-	                    Global.Overcast <= 0.60 ? 5 :
-	                    Global.Overcast <= 0.70 ? 6 :
-	                    Global.Overcast <= 0.80 ? 7 :
-	                    Global.Overcast <= 0.90 ? 8 :
+	                    Global.Overcast <= 0.50 ? 6 :
+	                    Global.Overcast <= 0.60 ? 6 :
+	                    Global.Overcast <= 0.70 ? 7 :
+	                    Global.Overcast <= 0.80 ? 8 :
+	                    Global.Overcast <= 0.90 ? 9 :
 	                    Global.Overcast > 0.90  ? 9 :
 	                                              9;
 }
@@ -168,6 +168,9 @@ world_environment::update() {
     auto const intensity = std::min( 1.15f * ( 0.05f + keylightintensity + skydomehsv.z ), 1.25f );
     // the impact of sun component is reduced proportionally to overcast level, as overcast increases role of ambient light
     auto const diffuselevel = std::lerp( keylightintensity, intensity * ( 1.0f - twilightfactor ), 1.0f - std::min( 1.f, Global.Overcast ) * 0.75f );
+    // update the fog. setting it to match the average colour of the sky dome is cheap
+    // but quite effective way to make the distant items blend with background better
+    Global.FogColor = glm::mix (m_skydome.GetAverageHorizonColor(), keylightcolor, diffuselevel * std::clamp((float)Global.fLuminance, 0.f, 1.f));
     // ...update light colours and intensity.
     keylightcolor = keylightcolor * diffuselevel;
     Global.DayLight.diffuse = glm::vec4( keylightcolor, Global.DayLight.diffuse.a );
@@ -182,12 +185,6 @@ world_environment::update() {
     Global.DayLight.ambient[ 2 ] = std::lerp( skydomehsv.z, skydomecolour.b, ambienttone ) * ambientintensitynightfactor;
 
     Global.fLuminance = intensity;
-
-    // update the fog. setting it to match the average colour of the sky dome is cheap
-    // but quite effective way to make the distant items blend with background better
-    Global.FogColor = m_skydome.GetAverageHorizonColor() * keylightcolor *
-	                  std::clamp((float)Global.fLuminance, 0.f, 1.f);
-	
 
     // weather-related simulation factors
     Global.FrictionWeatherFactor = Global.Weather == "rain:" ? 0.85f : Global.Weather == "snow:" ? 0.75f : 1.0f;
