@@ -275,7 +275,7 @@ void CSkyDome::RebuildColors() {
         // this height-based factor is reduced the farther the sun is up in the sky
         float const shiftfactor = std::clamp( std::lerp(heightbasedphase, sunbasedphase, sunbasedphase), 0.0f, 1.0f );
         // h = 210 makes for 'typical' sky tone
-        glm::vec3 const skytonecolor = colors::HSVtoRGB( glm::vec3( 210.0f, 0.5f, colorconverter.z ) );
+        glm::vec3 const skytonecolor = colors::HSVtoRGB( glm::vec3( 210.0f, std::max(0.5f, colorconverter.y), colorconverter.z ) );
 
         color = colors::HSVtoRGB( colorconverter );
         color = glm::mix( color, skytonecolor, shiftfactor * Global.m_skyhuecorrection );
@@ -289,17 +289,14 @@ void CSkyDome::RebuildColors() {
             color.z = 0.75f * std::max( color.z + m_sundirection.y, 0.075f );
             color.x = 0.20f * color.z; 
             color.y = 0.65f * color.z;
-if (Global.AirTemperature > 0)
             color *= 1.0f + simulation::Environment.moon().getIntensity() / 0.12;
         }
         // simple gradient, darkening towards the top
         color *= std::clamp( 1.0f - vertex.y * 0.75f, 0.0f, 1.f );
 
-        float const horizonboost = 1.5f + m_overcast;
         float const horizonbandwidth = 0.2f; // boost tapers to 0 by ~11.5 degrees elevation
         float const horizonband = std::clamp( 1.0f - vertex.y / horizonbandwidth, 0.0f, 1.0f );
-
-        color *= std::lerp( 1.0, horizonboost, horizonband );
+        color *= std::lerp( 1.0, 1.5, horizonband );
 
         //color *= ( 0.25f - vertex.y );
         m_colours[ i ] = color;
