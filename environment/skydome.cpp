@@ -185,7 +185,7 @@ float CSkyDome::PerezFunctionO2( float Perezcoeffs[ 5 ], const float Icostheta, 
 void CSkyDome::RebuildColors() {
 
     float twilightfactor = std::clamp( -simulation::Environment.sun().getAngle(), 0.0f, 18.0f ) / 18.0f;
-    auto gammacorrection = std::lerp( 1.0f, 0.45f, twilightfactor );
+    auto gammacorrection = std::lerp( 1.0f, 0.6f, twilightfactor );
 
 	// get zenith luminance
 	float const chi = ( 4.0f / 9.0f - m_turbidity / 120.0f ) * ( M_PI - 2.0f * m_thetasun );
@@ -280,15 +280,19 @@ void CSkyDome::RebuildColors() {
         color = colors::HSVtoRGB( colorconverter );
         color = glm::mix( color, skytonecolor, shiftfactor * Global.m_skyhuecorrection );
 
+        // not correct at all, but creates quite pleasing colors so let's keep that
+        color = glm::pow ( color, glm::vec3( 2.2f ) );
+
         // crude correction for the times where the model breaks (late night)
         // TODO: use proper night sky calculation for these times instead
-        if( color.x <= 0.05f
-         && color.y <= 0.05f ) {
+        if( color.x <= 0.02f
+         && color.y <= 0.02f ) {
             // darken the sky as the sun goes deeper below the horizon
             // 15:50:75 is picture-based night sky colour. it may not be accurate but looks 'right enough'
             color.z = 0.75f * std::max( color.z + m_sundirection.y, 0.075f );
             color.x = 0.20f * color.z; 
             color.y = 0.65f * color.z;
+            color *= m_overcast;
             color *= 1.0f + simulation::Environment.moon().getIntensity() / 0.12;
         }
         // simple gradient, darkening towards the top
@@ -296,10 +300,9 @@ void CSkyDome::RebuildColors() {
 
         float const horizonbandwidth = 0.2f; // boost tapers to 0 by ~11.5 degrees elevation
         float const horizonband = std::clamp( 1.0f - vertex.y / horizonbandwidth, 0.0f, 1.0f );
-        color *= std::lerp( 1.0, 1.5, horizonband );
 
         //color *= ( 0.25f - vertex.y );
-        m_colours[ i ] = color;
+        m_colours[ i ] = color * glm::vec3( std::lerp( 1.0, 2.0, horizonband ) );
         averagecolor += color;
         if( m_vertices.size() - i <= m_tesselation * 10 + 10 ) {
             // calculate horizon colour from the bottom band of tris
