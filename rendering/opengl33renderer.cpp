@@ -863,6 +863,7 @@ void opengl33_renderer::Render_pass(viewport_config &vp, rendermode const Mode)
         glEnable(GL_DEPTH_TEST);
 
 		Timer::subsystem.gfx_color.start();
+		m_animate_time_accumulator = std::chrono::steady_clock::duration::zero();
 
         if (vr && (vp.proj_type == viewport_config::vr_left || vp.proj_type == viewport_config::vr_right)) {
             glDebug("vr hiddenarea");
@@ -970,6 +971,7 @@ void opengl33_renderer::Render_pass(viewport_config &vp, rendermode const Mode)
             }
         }
 
+		Timer::subsystem.gfx_animate.add( std::chrono::duration_cast<std::chrono::microseconds>( m_animate_time_accumulator ) );
 		Timer::subsystem.gfx_color.stop();
 
         // store draw stats
@@ -2366,7 +2368,9 @@ ITexture const &opengl33_renderer::Texture(texture_handle const Texture) const
 
 void opengl33_renderer::Update_AnimModel(TAnimModel *model)
 {
+	auto const t0 = std::chrono::steady_clock::now();
 	model->RaAnimate(m_framestamp);
+	m_animate_time_accumulator += std::chrono::steady_clock::now() - t0;
 }
 
 void opengl33_renderer::Render(scene::basic_region *Region)
@@ -2582,7 +2586,11 @@ void opengl33_renderer::Render(cell_sequence::iterator First, cell_sequence::ite
 
 		auto *cell = First->second;
 		// przeliczenia animacji torów w sektorze
-		cell->RaAnimate(m_framestamp);
+		{
+			auto const t0 = std::chrono::steady_clock::now();
+			cell->RaAnimate(m_framestamp);
+			m_animate_time_accumulator += std::chrono::steady_clock::now() - t0;
+		}
 
 		switch (m_renderpass.draw_mode)
 		{
@@ -2965,7 +2973,11 @@ void opengl33_renderer::Render(TAnimModel *Instance)
 	}
 	}
 
-	Instance->RaAnimate(m_framestamp); // jednorazowe przeliczenie animacji
+	{
+		auto const t0 = std::chrono::steady_clock::now();
+		Instance->RaAnimate(m_framestamp); // jednorazowe przeliczenie animacji
+		m_animate_time_accumulator += std::chrono::steady_clock::now() - t0;
+	}
 	Instance->RaPrepare();
 	if (Instance->pModel)
 	{
@@ -4685,7 +4697,7 @@ void opengl33_renderer::Render_Alpha(TSubModel *Submodel)
 						model_ubs.param[0] = glm::vec4(glm::vec3(lightcolor), Submodel->fVisible * glarelevel);
 
 						// main draw call
-						if (Submodel->occlusion_query) {
+						if (false && Submodel->occlusion_query) {
 							if (!Global.gfx_usegles) {
 								glBeginConditionalRender(*Submodel->occlusion_query, GL_QUERY_WAIT);
 								draw(m_billboardgeometry);
@@ -4760,15 +4772,15 @@ void opengl33_renderer::Render_Alpha(TSubModel *Submodel)
 					model_ubs.param[0] = glm::vec4(glm::vec3(lightcolor), Submodel->fVisible * std::min(1.f, lightlevel));
 
                     if (gl::vao::use_vao) {
-                        if (!Submodel->occlusion_query)
-                            Submodel->occlusion_query.emplace(gl::query::ANY_SAMPLES_PASSED);
-                        Submodel->occlusion_query->begin();
+                        //if (!Submodel->occlusion_query)
+                        //    Submodel->occlusion_query.emplace(gl::query::ANY_SAMPLES_PASSED);
+                        //Submodel->occlusion_query->begin();
                     }
 
 					draw(Submodel->m_geometry.handle);
 
                     if (gl::vao::use_vao)
-                        Submodel->occlusion_query->end();
+                        //Submodel->occlusion_query->end();
 
 					// post-draw reset
 					model_ubs.emission = 0.0f;
