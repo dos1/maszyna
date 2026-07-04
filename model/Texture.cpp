@@ -418,7 +418,7 @@ void opengl_texture::update_from_memory(size_t width, size_t height, const uint8
 	}
 	glTexImage2D(target, 0, data_format, data_width, data_height, 0, data_components, GL_UNSIGNED_BYTE, raw);
 	glGenerateMipmap(target);
-	glFlush();
+	//glFlush();
 }
 
 void
