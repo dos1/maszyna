@@ -9,6 +9,7 @@ http://mozilla.org/MPL/2.0/.
 
 #pragma once
 
+#include <chrono>
 #include "rendering/renderer.h"
 #include "rendering/openglcamera.h"
 #include "rendering/opengl33light.h"
@@ -349,6 +350,7 @@ class opengl33_renderer : public gfx_renderer {
     opengl33_precipitation m_precipitationrenderer;
     opengl33_particles m_particlerenderer; // particle visualization subsystem
 
+	std::chrono::steady_clock::duration m_animate_time_accumulator{};
 	unsigned int m_framestamp; // id of currently rendered gfx frame
 	float m_framerate;
 	double m_updateaccumulator{0.0};
