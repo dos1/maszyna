@@ -48,9 +48,9 @@ namespace gl
         {
             update_ring_bytes(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
         }
+        void update_ring_bytes(const uint8_t *data, size_t size);
 
     private:
-        void update_ring_bytes(const uint8_t *data, size_t size);
         void grow_ring(size_t new_slot_count);
     };
 

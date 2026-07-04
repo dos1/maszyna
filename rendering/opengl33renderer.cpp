@@ -160,7 +160,7 @@ bool opengl33_renderer::Init(GLFWwindow *Window)
 	// continue to multiply effective_modelview = identity * modelview = modelview.
 	{
 		glm::mat4 identity( 1.0f );
-		instance_ubo->update( reinterpret_cast<uint8_t const*>(&identity), 0, sizeof(identity) );
+		instance_ubo->update_ring_bytes( reinterpret_cast<uint8_t const*>(&identity), sizeof(identity) );
 	}
 
 	int samples = 1 << Global.iMultisampling;
@@ -3113,10 +3113,9 @@ void opengl33_renderer::Render_Instanced( TModel3d *Model, std::vector<TAnimMode
 		std::size_t const this_batch = std::min<std::size_t>( total - offset_idx, gl::MAX_INSTANCES_PER_BATCH );
 
 		// 2a. Upload N modelviews to instance_ubo[0..N-1].
-		instance_ubo->update(
+		instance_ubo->update_ring_bytes(
 			reinterpret_cast<uint8_t const *>( m_instance_modelviews.data() + offset_idx ),
-			0,
-			static_cast<int>( this_batch * sizeof( glm::mat4 ) ) );
+			static_cast<size_t>( this_batch * sizeof( glm::mat4 ) ) );
 
 		// 2b. Push identity onto the matrix stack so submodel transforms
 		// accumulate from identity, not from camera/instance space.
@@ -3143,7 +3142,7 @@ void opengl33_renderer::Render_Instanced( TModel3d *Model, std::vector<TAnimMode
 		// non-instanced draws continue to compute identity * modelview.
 		{
 			glm::mat4 const identity( 1.0f );
-			instance_ubo->update( reinterpret_cast<uint8_t const *>( &identity ), 0, sizeof( identity ) );
+			instance_ubo->update_ring_bytes( reinterpret_cast<uint8_t const *>( &identity ), sizeof( identity ) );
 		}
 
 		offset_idx += this_batch;
@@ -3309,10 +3308,9 @@ void opengl33_renderer::Render_Sleepers( TTrack *Track )
 		while( offset_idx < band_end ) {
 			std::size_t const this_batch = std::min<std::size_t>( band_end - offset_idx, gl::MAX_INSTANCES_PER_BATCH );
 
-			instance_ubo->update(
+			instance_ubo->update_ring_bytes(
 				reinterpret_cast<uint8_t const *>( instance_modelviews.data() + offset_idx ),
-				0,
-				static_cast<int>( this_batch * sizeof( glm::mat4 ) ) );
+				static_cast<size_t>( this_batch * sizeof( glm::mat4 ) ) );
 
 			::glPushMatrix();
 			::glLoadIdentity();
@@ -3335,7 +3333,7 @@ void opengl33_renderer::Render_Sleepers( TTrack *Track )
 			// continue to compute identity * modelview (mirroring Render_Instanced).
 			{
 				glm::mat4 const identity( 1.0f );
-				instance_ubo->update( reinterpret_cast<uint8_t const *>( &identity ), 0, sizeof( identity ) );
+				instance_ubo->update_ring_bytes( reinterpret_cast<uint8_t const *>( &identity ), sizeof( identity ) );
 			}
 
 			offset_idx += this_batch;

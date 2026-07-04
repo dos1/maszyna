@@ -195,12 +195,12 @@ bool driver_mode::update()
 		int updatecount = 1;
 		if (deltatime > m_primaryupdaterate) // normalnie 0.01s
 		{
-			/*
+			
 			        // NOTE: experimentally disabled physics update cap
-			        auto const iterations = std::ceil(dt / m_primaryupdaterate);
+			        auto const iterations = std::ceil(deltatime / m_primaryupdaterate);
 			        updatecount = std::min( 20, static_cast<int>( iterations ) );
-			*/
-			updatecount = std::ceil(deltatime / m_primaryupdaterate);
+			
+			//updatecount = std::ceil(deltatime / m_primaryupdaterate);
 			/*
 			        // NOTE: changing dt wrecks things further down the code. re-acquire proper value later or cleanup here
 			        dt = dt / iterations; // Ra: fizykę lepiej by było przeliczać ze stałym krokiem
@@ -215,10 +215,10 @@ bool driver_mode::update()
 		if (true == Global.FullPhysics)
 		{
 			// mixed calculation mode, steps calculated in ~0.05s chunks
-			while (updatecount >= 5)
+			while (updatecount >= 1)
 			{
-				simulation::State.update(stepdeltatime, 5);
-				updatecount -= 5;
+				simulation::State.update(stepdeltatime, 1);
+				updatecount -= 1;
 			}
 			if (updatecount)
 			{
