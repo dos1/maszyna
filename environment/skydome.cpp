@@ -300,9 +300,10 @@ void CSkyDome::RebuildColors() {
 
         float const horizonbandwidth = 0.2f; // boost tapers to 0 by ~11.5 degrees elevation
         float const horizonband = std::clamp( 1.0f - vertex.y / horizonbandwidth, 0.0f, 1.0f );
+        color *= glm::vec3( std::lerp( 1.0, 2.0, horizonband ) );
 
         //color *= ( 0.25f - vertex.y );
-        m_colours[ i ] = color * glm::vec3( std::lerp( 1.0, 2.0, horizonband ) );
+        m_colours[ i ] = color;
         averagecolor += color;
         if( m_vertices.size() - i <= m_tesselation * 10 + 10 ) {
             // calculate horizon colour from the bottom band of tris
