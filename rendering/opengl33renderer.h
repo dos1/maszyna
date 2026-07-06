@@ -30,6 +30,8 @@ http://mozilla.org/MPL/2.0/.
 #include "gl/pbo.h"
 #include "gl/query.h"
 
+struct python_rt;
+
 // bare-bones render controller, in lack of anything better yet
 class opengl33_renderer : public gfx_renderer {
   public:
@@ -321,6 +323,10 @@ class opengl33_renderer : public gfx_renderer {
 
 	void draw_debug_ui();
 
+	// optional fullscreen HUD overlay, driven by the python screen renderer (Global.hud_python_script)
+	void update_hud_overlay(double const Deltatime);
+	void render_hud_overlay();
+
 	// members
 	GLFWwindow *m_window{nullptr}; // main window
 	gfx::geometrybank_manager m_geometry;
@@ -446,6 +452,12 @@ class opengl33_renderer : public gfx_renderer {
 	std::unique_ptr<gl::postfx> m_pfx_motionblur;
 	std::unique_ptr<gl::postfx> m_pfx_tonemapping;
   std::unique_ptr<gl::postfx> m_pfx_chromaticaberration;
+
+	// optional python-rendered fullscreen HUD overlay
+	std::unique_ptr<gl::postfx> m_pfx_hud;
+	std::unique_ptr<opengl_texture> m_hud_tex;
+	std::shared_ptr<python_rt> m_hud_rt;
+	double m_hud_updatetimer { 0.0 };
 
 	// postfx ssao
 	std::unique_ptr<gl::postfx>      m_pfx_ssao;

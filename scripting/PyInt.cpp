@@ -255,13 +255,16 @@ auto python_taskqueue::init() -> bool
 		PyConfig_InitPythonConfig(&config);
 		config.install_signal_handlers = 0; // matches former Py_InitializeEx(0)
 
-		PyStatus status = PyConfig_SetString(&config, &config.home, pythonhome);
+		PyStatus status;
+		#ifdef _MSC_VER
+		status = PyConfig_SetString(&config, &config.home, pythonhome);
 		if (PyStatus_Exception(status))
 		{
 			PyConfig_Clear(&config);
 			ErrorLog("Python Interpreter: failed to set PYTHONHOME");
 			return false;
 		}
+		#endif
 
 		status = Py_InitializeFromConfig(&config);
 		if (PyStatus_Exception(status))
@@ -402,6 +405,7 @@ auto python_taskqueue::insert(task_request const &Task) -> bool
 	auto *renderer{fetch_renderer(Task.renderer)};
 	if (renderer == nullptr)
 	{
+WriteLog("python NNOPE");
 		return false;
 	}
 

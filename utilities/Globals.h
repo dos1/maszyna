@@ -264,6 +264,12 @@ struct global_settings {
 	bool python_uploadmain = true;
 	std::chrono::duration<float> python_minframetime {0.01f};
 
+	// optional fullscreen HUD overlay, rendered via the same python screen renderer
+	// mechanism used for in-cab displays. empty script name means the feature is disabled.
+	std::string hud_python_script;
+	glm::ivec2 hud_python_size { 960, 540 }; // resolution of the offscreen HUD render target
+	int hud_python_updatetime { 200 }; // delay between HUD updates, in milliseconds
+
     bool gfx_skiprendering = false;
     int gfx_framebuffer_width = -1;
     int gfx_framebuffer_height = -1;

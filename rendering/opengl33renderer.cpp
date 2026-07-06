@@ -170,6 +170,17 @@ bool opengl33_renderer::Init(GLFWwindow *Window)
 	m_pfx_tonemapping = std::make_unique<gl::postfx>("tonemapping");
     m_pfx_chromaticaberration = std::make_unique<gl::postfx>( "chromaticaberration" );
 
+	if (!Global.hud_python_script.empty())
+	{
+		// reuse the same render-to-texture mechanism used for in-cab python screens,
+		// just composited as a fullscreen overlay instead of mapped onto a 3D submodel
+		m_pfx_hud = std::make_unique<gl::postfx>("hud");
+		m_hud_tex = std::make_unique<opengl_texture>();
+m_hud_tex->alloc_rendertarget(GL_RGB8, GL_RGB, 1280, 800);
+		m_hud_rt = std::make_shared<python_rt>();
+		m_hud_rt->shared_tex = m_hud_tex.get();
+	}
+
 	m_pfx_ssao       = std::make_unique<gl::postfx>("ssao");
 	m_pfx_ssao_blur  = std::make_unique<gl::postfx>("ssao_blur");
 	m_pfx_ssao_apply = std::make_unique<gl::postfx>("ssao_apply");
@@ -574,6 +585,9 @@ bool opengl33_renderer::Render()
 		auto const quantizationstep{0.004f};
 		m_sunlight.direction = glm::normalize(quantizationstep * glm::roundEven(m_sunlight.direction * (1.f / quantizationstep)));
 	}
+
+	update_hud_overlay(Timer::GetDeltaTime());
+
 	// generate new frame
     opengl_texture::reset_unit_cache();
 
@@ -681,6 +695,40 @@ void opengl33_renderer::SwapBuffers()
         + " traction: " + to_string( m_colorpass.draw_stats.traction, 7 ) + "\n"
         + " lines:    " + to_string( m_colorpass.draw_stats.lines, 7 ) + "\n"
         + "particles: " + to_string( m_colorpass.draw_stats.particles, 7 );
+}
+
+// requests a fresh frame from the python HUD renderer, throttled by Global.hud_python_updatetime.
+// reuses the exact same request/render-target plumbing as in-cab python screens (TTrain::update_screens),
+// just driven from the renderer instead of from a vehicle, and fed by the currently controlled train.
+void opengl33_renderer::update_hud_overlay(double const Deltatime)
+{
+	if (!m_hud_rt)
+		return; // feature disabled (no Global.hud_python_script configured)
+	if (!simulation::Train)
+		return; // nothing to drive the HUD off of outside of an active, controlled train
+	m_hud_updatetimer += Deltatime;
+	if (m_hud_updatetimer < Global.hud_python_updatetime * 0.001)
+		return;
+	m_hud_updatetimer = 0.0;
+	dictionary_source hudparameters;
+	hudparameters.insert("hud_width", Global.hud_python_size.x);
+	hudparameters.insert("hud_height", Global.hud_python_size.y);
+
+	auto state_dict = simulation::Train->GetTrainState(hudparameters);
+	if (!state_dict)
+		return;
+	Application.request({ Global.hud_python_script, state_dict, m_hud_rt });
+}
+
+// composites the latest HUD frame (if any) over the already tonemapped scene, as a single
+// alpha-blended fullscreen quad -- no UV mapping onto 3D geometry, no per-screen touch lists,
+// just whatever the python renderer last produced, drawn straight onto the window.
+void opengl33_renderer::render_hud_overlay()
+{
+	if ((!m_hud_tex) || (m_hud_tex->id == (GLuint)-1))
+		return; // feature disabled, or no frame has arrived from the worker thread yet
+	glViewport(0, 0, Global.fb_size.x, Global.fb_size.y);
+	m_pfx_hud->apply_blend(*m_hud_tex, nullptr);
 }
 
 void opengl33_renderer::draw_debug_ui()
@@ -1076,6 +1124,7 @@ if (!Global.gfx_skippipeline)
 		Timer::subsystem.gfx_gui.start();
 
         if (vp.main) {
+render_hud_overlay();
             // clear state for ui
             gl::program::unbind();
 			draw_debug_ui();

@@ -870,6 +870,15 @@ bool global_settings::ConfigParsePython(cParser& Parser, const std::string& toke
         return true;
     }
 
+    if (token == "python.hud")
+    {
+        // usage: python.hud <renderer script name> <width> <height> <updatetime ms>
+        // an empty/missing entry leaves hud_python_script empty, which keeps the feature disabled
+        Parser.getTokens(4, false);
+        Parser >> hud_python_script >> hud_python_size.x >> hud_python_size.y >> hud_python_updatetime;
+        return true;
+    }
+
     return false;
 }
 

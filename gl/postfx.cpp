@@ -36,6 +36,8 @@ void gl::postfx::apply(std::vector<opengl_texture *> src, framebuffer *dst)
     else
         framebuffer::unbind();
 
+
+    glClear(GL_COLOR_BUFFER_BIT);
     program.bind();
     vao->bind();
 
@@ -46,4 +48,27 @@ void gl::postfx::apply(std::vector<opengl_texture *> src, framebuffer *dst)
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void gl::postfx::apply_blend(opengl_texture &src, framebuffer *dst)
+{
+    if (dst)
+        dst->bind();
+    else
+        framebuffer::unbind();
+
+    program.bind();
+    vao->bind();
+
+    src.bind(0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glDisable(GL_BLEND);
 }
