@@ -213,7 +213,9 @@ void scenarioloader_ui::render_()
 	const float spacing = 10.0f * scale; // odstęp między ikoną a tekstem
 
 	// Loading icon
-	const deferred_image *img = &m_loading_wheel_frames[38];
+	static int frame = 0;
+	const deferred_image *img = &m_loading_wheel_frames[frame++];
+	if (frame >= 60) frame = 0;
 	const auto loading_tex = img->get();
 	const auto loading_size = glm::vec2(img->size()) * glm::vec2(scale);
 
@@ -229,7 +231,7 @@ void scenarioloader_ui::render_()
 	                icon_center_y - text_size.y * 0.5f);
 
 	// Draw
-	//draw_list->AddImage(reinterpret_cast<ImTextureID>(loading_tex), icon_pos, ImVec2(icon_pos.x + loading_size.x, icon_pos.y + loading_size.y), ImVec2(0, 0), ImVec2(1, 1));
+	draw_list->AddImage(reinterpret_cast<ImTextureID>(loading_tex), icon_pos, ImVec2(icon_pos.x + loading_size.x, icon_pos.y + loading_size.y), ImVec2(0, 0), ImVec2(1, 1));
 	draw_list->AddText(text_pos, IM_COL32_WHITE, m_progresstext.c_str());
 
 	// Trivia 
