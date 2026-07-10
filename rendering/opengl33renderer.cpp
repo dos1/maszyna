@@ -5318,7 +5318,7 @@ void opengl33_renderer::Update_Lights(light_array &Lights)
     light_ubs.ambient = m_sunlight.ambient * m_sunlight.factor;// *simulation::Environment.light_intensity();
 	light_ubs.lights[0].type = gl::light_element_ubs::DIR;
 	light_ubs.lights[0].dir = mv * glm::vec4(m_sunlight.direction, 0.0f);
-	light_ubs.lights[0].color = m_sunlight.diffuse * m_sunlight.factor * simulation::Environment.light_intensity();
+	light_ubs.lights[0].color = m_sunlight.diffuse * m_sunlight.factor; // * simulation::Environment.light_intensity();
 	light_ubs.lights[0].ambient = 0.0f;
 	light_ubs.lights[0].intensity = 1.0f;
     // fill fog data
