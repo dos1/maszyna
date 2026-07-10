@@ -60,6 +60,7 @@ void main()
 	float reflectivity = param[1].z * texture(normalmap, texture_coords ).a;
 	float specularity = 1.0;
 	glossiness = abs(param[1].w);
+	glossiness_cap = GLOSSINESS_LEGACY_REFERENCE;
 	
 	fragcolor = apply_lights(fragcolor, fragnormal, tex_color.rgb, reflectivity, specularity, shadow_tone);
 

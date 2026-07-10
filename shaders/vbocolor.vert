@@ -11,7 +11,7 @@ void main()
 {
 	f_pos = modelview * vec4(v_vert, 1.0);
 	f_clip_pos = (projection * modelview) * vec4(v_vert, 1.0);
-	f_color = pow(v_color, vec3(1.0));
+	f_color = v_color;
 
 	gl_Position = f_clip_pos;
 }

@@ -9,6 +9,8 @@ uniform sampler2D headlightmap;
 
 float glossiness = 1.0;
 float metalic = 0.0;
+float glossiness_cap = abs(param[1].w);
+const float GLOSSINESS_LEGACY_REFERENCE = 100.0;
 
 // ---------------------------------------------------------------------
 // Lighting balance tunables - tweak these to control overall scene
@@ -160,9 +162,9 @@ vec2 calc_light(vec3 light_dir, vec3 fragnormal)
     float diffuse_v = NdotL;
 
     // Mirror the env-map roughness derivation so direct and indirect lobes match.
-    // glossiness == param[1].w  →  roughness == 0.04 (near-mirror)
-    // glossiness == 0           →  roughness == 1.0  (fully diffuse)
-    float roughness = clamp(1.0 - glossiness / max(abs(param[1].w), 1.0), 0.04, 1.0);
+    // glossiness == glossiness_cap  →  roughness == 0.04 (near-mirror)
+    // glossiness == 0               →  roughness == 1.0  (fully diffuse)
+    float roughness = clamp(1.0 - glossiness / max(glossiness_cap, 1.0), 0.04, 1.0);
 
     // Cook-Torrance specular (no Fresnel — see above):
     //   f_spec = D(N,H,α) · G(N,V,L,α) / (4 · NdotL · NdotV)
@@ -274,7 +276,7 @@ vec3 apply_lights(vec3 fragcolor, vec3 fragnormal, vec3 texturecolor, float refl
     vec3 fresnel = F0 + (1.0 - F0) * pow(1.0 - NdotV, 5.0);
 
     const float MAX_REFLECTION_LOD = 8.0;
-    float env_roughness = 1.0 - clamp(glossiness / max(abs(param[1].w), 1.0), 0.0, 1.0);
+    float env_roughness = 1.0 - clamp(glossiness / max(glossiness_cap, 1.0), 0.0, 1.0);
     vec3 envcolor = envmap_color_lod(fragnormal, env_roughness * MAX_REFLECTION_LOD);
 
     // Pre-integrated env BRDF: roughness/F0/view-dependent specular scale.

@@ -159,6 +159,7 @@ void main() {
       float reflectivity = param[1].z;
       float specularity = (tex_color.r + tex_color.g + tex_color.b) * 0.5;
       glossiness = abs(param[1].w);
+      glossiness_cap = GLOSSINESS_LEGACY_REFERENCE;
       
       fragcolor = apply_lights(fragcolor, fragnormal, tex_color.rgb, reflectivity, specularity, shadow_tone);
       vec4 color = vec4(fragcolor, tex_color.a * alpha_mult);

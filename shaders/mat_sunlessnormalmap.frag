@@ -55,6 +55,9 @@ vec3 apply_lights_sunless(vec3 fragcolor, vec3 fragnormal, vec3 texturecolor, fl
 	if(lights_count == 0U) 
 		return (fragcolor + emissioncolor + envcolor * reflectivity) * texturecolor;
 
+	glossiness = abs(param[1].w);
+	glossiness_cap = GLOSSINESS_LEGACY_REFERENCE;
+
 	vec2 sunlight = calc_dir_light(lights[0], fragnormal);
 
 	// Sharpen N.L for stronger contrast between lit and shaded cab
@@ -63,7 +66,6 @@ vec3 apply_lights_sunless(vec3 fragcolor, vec3 fragnormal, vec3 texturecolor, fl
 	float diffuseamount = (sun_NdotL * param[1].x) * lights[0].intensity;
 	fragcolor += envcolor * reflectivity;
 	float specularamount = (sunlight.y * param[1].y * specularity) * lights[0].intensity;
-	glossiness = abs(param[1].w);
 
 	for (uint i = 1U; i < lights_count; i++)
 	{
