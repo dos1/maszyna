@@ -71,6 +71,10 @@ bool opengl46_renderer::Init(GLFWwindow *Window)
         glDebugMessageCallback( ErrorCallback, 0 );
     }
 
+	glClearColor( 0.f, 0.f, 0.f, 1.f );
+	glClear( GL_COLOR_BUFFER_BIT );
+	glfwSwapBuffers( Window );
+
 	if (!Init_caps())
 		return false;
 
